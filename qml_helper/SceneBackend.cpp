@@ -133,8 +133,15 @@ public:
         // texture node must have a texture, so use the default 0 texture.
         m_texture      = createTextureFromGl(0, QSize(64, 64), window);
         m_init_texture = m_texture;
-        setTexture(m_texture);
-        setFiltering(QSGTexture::Linear);
+        if (m_texture) {
+            setTexture(m_texture);
+            setFiltering(QSGTexture::Linear);
+        } else {
+            qCWarning(wekdeScene,
+                      "TextureNode: default GL texture (handle 0) could not be created — "
+                      "node will render as transparent until first frame. "
+                      "OpenGL context may be missing (headless/offscreen).");
+        }
         setOwnsTexture(false);
     }
 
@@ -232,7 +239,12 @@ public slots:
             else
                 m_texture = m_init_texture;
 
-            setTexture(m_texture);
+            if (m_texture)
+                setTexture(m_texture);
+            else
+                qCWarning(wekdeScene,
+                          "TextureNode::newTexture: no texture available (both external and init "
+                          "textures are null) — skipping setTexture");
             markDirty(DirtyMaterial);
             Q_EMIT textureInUse();
 
